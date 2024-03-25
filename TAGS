@@ -1,0 +1,137 @@
+
+./test/Main.hs,37
+module Main Main0,1
+main main2,3
+
+./src/Main.hs,56
+module Main Main0,1
+flags flags8,9
+main main30,31
+
+./src/Flag2.hs,278
+module Flag2Flag22,3
+type FlagName FlagName27,28
+type Description Description28,29
+define define30,31
+parseArgs parseArgs33,34
+_parse _parse44,45
+_process _process52,53
+_compareTypes _compareTypes78,79
+_lookupType _lookupType102,103
+_splitBy _splitBy105,106
+
+./src/Flag3.hs,581
+module Flag3Flag33,4
+type FlagName FlagName27,28
+type Description Description28,29
+define define30,31
+parseArgs parseArgs33,34
+_parse _parse43,44
+newtype Short Short85,86
+newtype Short = S S85,86
+_checkForSyntax _checkForSyntax87,88
+instance Mode Mode Short96,97
+  parse2 parse297,98
+  process process104,105
+newtype LeftMember LeftMember128,129
+newtype LeftMember = LM LM128,129
+newtype RightMember RightMember129,130
+newtype RightMember = RM RM129,130
+eitherBool eitherBool131,132
+_splitBy _splitBy136,137
+_compareTypes _compareTypes142,143
+
+./src/Flag/Types3.hs,1084
+module Flag.Types3 Flag.Types32,3
+data ShortModeShortMode8,9
+data LongModeLongMode9,10
+data Flag Flag11,12
+data Flag a = FlagFlag11,12
+  { getName getName12,13
+  , getValue getValue13,14
+  , getDescription getDescription14,15
+data Value Value17,18
+data Value = forall forall17,18
+instance Show Show Value19,20
+  show show20,21
+data Policy Policy22,23
+data Policy = PolicyPolicy22,23
+  { modeLength modeLength23,24
+  , modePrefix modePrefix24,25
+mkPolicy mkPolicy27,28
+newtype Flags Flags31,32
+newtype Flags k v = Flags { unFlags unFlags31,32
+newtype Args Args32,33
+newtype Args k v = Args { unArgs unArgs32,33
+newtype NonEmptyArgs NonEmptyArgs33,34
+newtype NonEmptyArgs a = NEArgs NEArgs33,34
+newtype NonEmptyArgs a = NEArgs { unNEArgs unNEArgs33,34
+class Mode Mode35,36
+  parse2 parse236,37
+  process process37,38
+data Error Error39,40
+data Error = UnknownFlag UnknownFlag39,40
+           | FlagSyntax FlagSyntax40,41
+           | IncompatibleType IncompatibleType41,42
+instance Show Show Error43,44
+  show show44,45
+
+./src/Flag/Types2.hs,700
+module Flag.Types2 Flag.Types22,3
+data ShortShort8,9
+data LongLong9,10
+data Flag Flag11,12
+data Flag a = FlagFlag11,12
+  { getName getName12,13
+  , getValue getValue13,14
+  , getDescription getDescription14,15
+data Value Value17,18
+data Value = forall forall17,18
+instance Show Show Value19,20
+  show show20,21
+newtype Flags Flags22,23
+newtype Flags k v = Flags { unFlags unFlags22,23
+newtype Args Args23,24
+newtype Args k v = Args { unArgs unArgs23,24
+data Error Error25,26
+data Error = UnknownFlag UnknownFlag25,26
+           | FlagSyntax FlagSyntax26,27
+           | IncompatibleType IncompatibleType27,28
+instance Show Show Error29,30
+  show show30,31
+
+./src/Flag/Types.hs,697
+module Flag.Types Flag.Types2,3
+data ShortShort7,8
+data LongLong8,9
+data Flag Flag10,11
+data Flag a = FlagFlag10,11
+  { getName getName11,12
+  , getValue getValue12,13
+  , getDescription getDescription13,14
+data Value Value16,17
+data Value = forall forall16,17
+instance Show Show Value18,19
+  show show19,20
+newtype Flags Flags21,22
+newtype Flags k v = Flags { unFlags unFlags21,22
+newtype Args Args22,23
+newtype Args k v = Args { unArgs unArgs22,23
+data Error Error24,25
+data Error = UnknownFlag UnknownFlag24,25
+           | FlagSyntax FlagSyntax25,26
+           | IncompatibleType IncompatibleType26,27
+instance Show Show Error28,29
+  show show29,30
+
+./src/Flag.hs,264
+module FlagFlag3,4
+type FlagName FlagName26,27
+type Description Description27,28
+define define29,30
+parseArgs parseArgs32,33
+_parse _parse43,44
+_process _process50,51
+_compareTypes _compareTypes75,76
+_splitBy _splitBy102,103
+flags flags108,109

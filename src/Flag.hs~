@@ -1,0 +1,210 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
+module Flag
+  ( Flag
+  , Short
+  , Long
+
+  , define
+  , parseArgs
+  ) where
+
+import           Data.HashMap.Lazy  (HashMap)
+import qualified Data.HashMap.Lazy  as Map (fromList, intersection, keys,
+                                            keysSet, lookup, union)
+import           Data.HashSet       (HashSet)
+import qualified Data.HashSet       as Set (member)
+import           Data.List          (intercalate)
+import           Data.List.NonEmpty (NonEmpty (..))
+import qualified Data.List.NonEmpty as NE (fromList, map, nonEmpty, toList, zip)
+import           Data.List.Split    (splitOn)
+import           Data.Maybe         (mapMaybe)
+import           Data.Type.Equality (TestEquality)
+import           Data.Typeable
+import           Flag.Types
+import qualified Type.Reflection    as Refl (TypeRep, eqTypeRep, typeOf)
+
+type FlagName = String
+type Description = String
+
+define :: (Show a, Typeable a) => FlagName -> a -> Description -> NonEmpty (Flag b)
+define n v d = Flag n (Value v) d :| []
+
+parseArgs :: NonEmpty (Flag a) -> [String] -> Either Error (HashMap String Value)
+parseArgs flags args =
+  let
+    flagsKV = Map.fromList . NE.toList $ NE.zip (NE.map getName flags) (NE.map getValue flags)
+  in case NE.nonEmpty args of
+    Nothing -> Right flagsKV
+    Just v  ->
+      case _parse (Flags flagsKV) v of
+        Left e  -> Left e
+        Right v -> Right $ unArgs v
+
+_parse :: Flags String Value -> NonEmpty String -> Either Error (Args String Value)
+_parse flagsKV args = do
+  processed <- _process flagsKV args
+  argsKV <- _compareTypes flagsKV processed
+  let fkv = unFlags flagsKV
+      akv = unArgs argsKV
+  return . Args $ Map.intersection (Map.union akv fkv) fkv
+
+_process :: Flags String Value -> NonEmpty String -> Either Error (Args String Value)
+_process flagsKV args =
+  let argsKV = Map.fromList . mapMaybe (_splitBy "=" . drop 2) $ NE.toList args
+  in do
+    check_for_syntax args
+    check_for_unknown (Map.keysSet $ unFlags flagsKV) (NE.fromList $ Map.keys argsKV)
+    return $ Args argsKV
+  where
+    check_for_syntax :: NonEmpty String -> Either Error ()
+    check_for_syntax = go . NE.toList
+      where
+        go :: [String] -> Either Error ()
+        go [] = Right ()
+        go (x:xs)
+          | take 2 x == "--" = go xs
+          | otherwise = Left $ FlagSyntax x
+
+    check_for_unknown :: HashSet String -> NonEmpty String -> Either Error ()
+    check_for_unknown set = go . NE.toList
+      where
+        go [] = Right ()
+        go (x:xs)
+          | Set.member x set = go xs
+          | otherwise = Left $ UnknownFlag x
+
+_compareTypes :: Flags String Value -> Args String Value -> Either Error (Args String Value)
+_compareTypes flags args = undefined-- go (Map.keys $ unFlags flags) flags args
+  -- where
+  --   go :: [String] -> Flags String Value -> Args String Value -> Either Error (Args String Value)
+  --   go [] _ args = Right args
+  --   go (x:xs) flags args =
+  --     let ftype = _lookupType x $ unFlags flags
+  --         atype = _lookupType x $ unArgs args
+  --     in case compare' ftype atype of
+  --          Just e  -> Left . IncompatibleType $ msg x e
+  --          Nothing -> go xs flags args
+
+  --   compare' :: Maybe TypeRep -> Maybe TypeRep -> Maybe (TypeRep, TypeRep)
+  --   compare' Nothing _         = Nothing
+  --   compare' _ Nothing         = Nothing
+  --   compare' (Just x) (Just y) = if x == y then Nothing else Just (x,y)
+
+  --   msg :: String -> (TypeRep, TypeRep) -> String
+  --   msg x (t1,t2) =
+  --     let flagName = "defined flag " <> x
+  --         defined = " has type " <> show t1
+  --         passed = ", but passed type is " <> show t2
+  --     in flagName <> defined <> passed
+
+cast' :: (Typeable b) => String -> HashMap String Value -> HashMap String Value -> Maybe b
+cast' k flagsKV argsKV = undefined
+
+_lookupType' :: String -> HashMap String Value -> HashMap String Value -> Maybe Bool
+_lookupType' k m m2 =
+  case Map.lookup k m of
+    Nothing        -> Nothing
+    Just (Value v) ->
+      case Map.lookup k m2 of
+        Nothing         -> Nothing
+        Just (Value v') ->
+          case Refl.eqTypeRep (Refl.typeOf v) (Refl.typeOf v') of
+            Nothing -> Nothing
+            Just r  -> Just True
+
+_lookupTypeInBoth :: String -> HashMap String Value -> HashMap String Value -> Maybe (TypeRep, TypeRep)
+_lookupTypeInBoth k m1 m2 = do
+    v1 <- _lookupType k m1
+    v2 <- _lookupType k m2
+    return (v1, v2)
+
+_lookupType :: String -> HashMap String Value -> Maybe TypeRep
+_lookupType k m = Map.lookup k m >>= \(Value v) -> return $ typeOf v
+
+-- _lookupType2 :: (Show a, Typeable a) => String -> HashMap String Value -> Maybe (Refl.TypeRep a)
+-- _lookupType2 k m = Map.lookup k m >>= \(Value v) -> return $ Refl.typeOf v
+  -- where
+  --   test :: (Show a, Typeable a) => a -> Maybe (Refl.TypeRep a)
+  --   test v = Just $ Refl.typeOf v
+
+_lookupType3 :: (Show a, Typeable a) => String -> HashMap String Value -> Maybe (Refl.TypeRep a)
+_lookupType3 k m =
+  case Map.lookup k m of
+    Nothing -> Nothing
+    Just v  -> test v
+  where
+    test :: forall k1 (a :: k1) . Value -> Maybe (Refl.TypeRep a)
+    test (Value v) = Just $ Refl.typeOf v
+
+lol :: Maybe (TypeRep, TypeRep) -> Bool
+lol Nothing = False
+lol (Just x) = go (fst x) (snd x)
+  where
+    go :: TypeRep -> TypeRep -> Bool
+    go x _ = case cast @TypeRep @TypeRep x of
+      Nothing -> False
+      Just _  -> True
+
+rot :: String -> HashMap String Value -> HashMap String Value -> Maybe Bool
+rot k m1 m2 =
+  case Map.lookup k m1 of
+    Nothing -> Nothing
+    Just (Value v) ->
+      case _lookupType k m2 of
+        Nothing -> Nothing
+        Just t  -> Just $ go v t
+  where
+    go :: forall a . (Show a, Typeable a) => a -> TypeRep -> Bool
+    go x _ = case cast @_ @TypeRep x of
+      Nothing -> False
+      Just _  -> True
+
+-- Just (Int,[Char])
+
+-- lol :: Maybe (Value,Value) -> Bool
+-- lol Nothing = False
+-- lol (Just (x,y)) =
+--   case eqTypeRep (typeOf x) (typeOf y) of
+--     Nothing -> False
+--     Just _  -> True
+
+-- _lookupType :: Typeable a => String -> HashMap String Value -> Maybe (TypeRep a)
+-- _lookupType k m =
+--   case Map.lookup k m of
+--     Nothing -> Nothing
+--     Just v  -> Just v
+
+_splitBy :: String -> String -> Maybe (String,Value)
+_splitBy delim xs =
+  case splitOn delim xs of
+    (x:ys) -> Just (x, Value $ intercalate delim ys)
+    _      -> Nothing
+
+test2 = "--http-port=8080"
+test = ["--http-port=8080", "--http-host=localhost", "--http-timeout=20s", "--db-driver=huy", "--db-user=loh", "--db-password=jflksd", "--db-name=fsdjkl", "--db-schema=fsdjklsjkl2222", "--redis-host=localhost"]
+
+
+-- --http-host=localhost --http-timeout=20s --db-driver=huy --db-user=loh --db-password=jflksd --db-name=fsdjkl --db-schema=fsdjklsjkl2222 --redis-host=localhost
+
+flags :: NonEmpty (Flag Long)
+flags =
+   -- http descriptor
+    define "http-host" "0.0.0.0" "http host"  <>
+    define "http-port" (9000 :: Int) "http port" <>
+    define "http-timeout" "15s" "http timeout" <>
+    -- storage descriptor
+    define "db-driver" "postgres" "database driver" <>
+    define "db-user" "amc_dev" "database user" <>
+    define "db-password" "amcdev" "database password" <>
+    define "db-name" "amcdb_dev" "database name" <>
+    define "db-schema" "userdata" "database schema" <>
+    define "db-mode" "disable" "database mode" <>
+    define "dsn" "postgresql://amc_dev:amcdev@0.0.0.0:5433/amcdb_dev?sslmode=disable" "database dsn" <>
+    define "db-host" "0.0.0.0" "database host" <>
+    define "db-port" (5433 :: Int) "database port" <>
+    define "db-enable-dsn" False "switch between dsn and ..." <>
+    define "db-encrypt" False "database data encryption" <>
+    -- redis descriptor
+    define "redis-host" "0.0.0.0" "redis host" <>
+    define "redis-port" (0 :: Int) "redis port"
