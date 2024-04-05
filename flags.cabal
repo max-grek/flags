@@ -18,12 +18,8 @@ common warnings
 library
     import:           warnings
     exposed-modules:  Flag
-                      Flag2
-                      Flag3
-                      Flag.Types
-                      Flag.Types2
-                      Flag.Types3
-    -- other-modules:
+    other-modules:    Internal.Types
+                      Internal.Process
     -- other-extensions:
     build-depends:    base ^>=4.18.2.0,
                       unordered-containers,

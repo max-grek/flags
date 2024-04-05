@@ -1,8 +1,7 @@
 module Main (main) where
 
---import           Flag               hiding (flags)
 import           Data.List.NonEmpty
-import           Flag3              hiding (flags)
+import           Flag               hiding (flags)
 import           System.Environment (getArgs)
 import           System.Exit        (exitFailure)
 

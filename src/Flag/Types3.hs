@@ -34,8 +34,8 @@ newtype Args k v = Args { unArgs :: HashMap k v} deriving newtype Show
 newtype NonEmptyArgs a = NEArgs { unNEArgs :: NonEmpty String } deriving newtype Show
 
 class Mode a where
-  parse2 :: Flags String Value -> NonEmptyArgs a -> Either Error (Args String String)
-  process :: Flags String Value -> NonEmptyArgs a -> Either Error [(String,String)]
+  enrichFlagName :: Flag a -> Flag a
+  process :: Flags String Value -> NonEmptyArgs a -> Either Error (Args String String)
 
 data Error = UnknownFlag String
            | FlagSyntax String

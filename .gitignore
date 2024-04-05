@@ -1,0 +1,15 @@
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.hs
+
+# Unignore all dirs
+!*/
+
+# Ignore Emacs stuff
+*~
+\#*\#
+
+# Ignore Mac stuff
+.DS_Store
