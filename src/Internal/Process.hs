@@ -24,6 +24,8 @@ data Strategy
   | DistinctBool
   | DistinctArbitrary
 
+-- | is that good idea to leave parts of phantom type Flag here
+-- | or you have another idea or approach of how to do that more correctly?
 data Short
 data Long
 
