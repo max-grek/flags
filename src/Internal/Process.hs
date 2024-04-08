@@ -47,21 +47,21 @@ instance Mode Short where
           go m xss@(x:y:xs) = do
             strategy <- _deduceStrategy (x,y) m -- | here I deduce strategy based on 2 arguments
             case strategy of
-              KVPair            -> ((x,y) :) <$> go m xs
-              DistinctBool      -> ((x,"") :) . ((y,"") :) <$> go m xs
-              DistinctArbitrary -> ((x,"") :) <$> go m (tail xss)
+              KVPair            -> ((x,y) :) <$> go m xs -- | -http-port 20 -> (http-port,20) :
+              DistinctBool      -> ((x,"") :) . ((y,"") :) <$> go m xs -- | -boolean1 -boolean2 -> (-boolean1,""),(-boolean2,"") :
+              DistinctArbitrary -> ((x,"") :) <$> go m (tail xss) -- | -boolean -http-port -> make (boolean,"") and go to the next recursion with the second flag
 
 _deduceStrategy :: (String,String) -> HashMap String Value -> Either Error Strategy
 _deduceStrategy pair@(x,y) m = go pair (Map.lookup x m, Map.lookup y m)
   where
     go :: (String,String) -> (Maybe Value,Maybe Value) -> Either Error Strategy
     go pair (Nothing, _) = Left . UnknownFlag $ fst pair -- | if there is no flag in map - error
-    go pair (Just v, Nothing) = _applyChecks pair v >> return KVPair -- | if there is - do checks
-    go pair (Just (Value v), Just (Value v')) =
-      case compare ("Bool" == show (typeOf v)) ("Bool" == show (typeOf v')) of
-        EQ -> Right DistinctBool
-        LT -> Left . FlagSyntax $ fst pair <> " must have arg"
-        GT -> Right DistinctArbitrary
+    go pair (Just v, Nothing) = _applyChecks pair v >> return KVPair -- | here we have flag and arg -> do checks
+    go pair (Just (Value v), Just (Value v')) = -- | here we have 2 flags
+      case compare ("Bool" == show (typeOf v)) ("Bool" == show (typeOf v')) of -- | now we need to deduce what kind of flags these are
+        EQ -> Right DistinctBool -- | if they equal, than they are distinct bool flags
+        LT -> Left . FlagSyntax $ fst pair <> " must have arg" -- | if first arg is non-boolean flag and second flag is a bool flag -> error, non-bool flag must have arg
+        GT -> Right DistinctArbitrary -- | Left arg is bool flag, second arg is non-bool flag
 
 _applyChecks :: (String,String) -> Value -> Either Error ()
 _applyChecks pair v = do
