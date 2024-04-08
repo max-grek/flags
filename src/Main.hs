@@ -1,18 +1,17 @@
+module Main (main) where
 
-
---import           Flag               hiding (flags)
-import           Data.List.NonEmpty
-import           Flag4              hiding (flags)
+import           Data.List.NonEmpty (NonEmpty)
+import           Flag               (Flag, Long, Short, define, parseArgs)
 import           System.Environment (getArgs)
 import           System.Exit        (exitFailure)
 
 flags :: NonEmpty (Flag Short)
 flags =
-   -- http descriptor
+   -- http flags
     define "http-host" "0.0.0.0" "http host"  <>
     define "http-port" (9000 :: Int) "http port" <>
     define "http-timeout" "15s" "http timeout" <>
-    -- storage descriptor
+    -- storage flags
     define "db-driver" "postgres" "database driver" <>
     define "db-user" "amc_dev" "database user" <>
     define "db-password" "amcdev" "database password" <>
@@ -24,7 +23,7 @@ flags =
     define "db-port" (5433 :: Int) "database port" <>
     define "db-enable-dsn" False "switch between dsn and ..." <>
     define "db-encrypt" False "database data encryption" <>
-    -- redis descriptor
+    -- redis flags
     define "redis-host" "0.0.0.0" "redis host" <>
     define "redis-port" (0 :: Int) "redis port"
 

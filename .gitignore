@@ -7,8 +7,9 @@
 # Unignore all dirs
 !*/
 
-# Ignore some dirs
+# Ignore haskell stuff
 dist-newstyle
+TAGS
 
 # Ignore Emacs stuff
 *~
