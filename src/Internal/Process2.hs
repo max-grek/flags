@@ -1,4 +1,4 @@
-module Internal.Process
+module Internal.Process2
   ( Mode
   , Short
   , Long
@@ -42,14 +42,9 @@ instance Mode Short where
       checkAndBuild (Flags m) xs = go m (NE.toList xs)
         where
           go :: HashMap String Value -> [String] -> Either Error [(String,Maybe Value)]
-          go _ [] = Right []
-          go m [x] = deduceStrategy (x,"") m >> Right [(x,Nothing)]
-          go m xss@(x:y:xs) = do
-            strategy <- deduceStrategy (x,y) m
-            case strategy of
-              KVPair            -> ((x,Just $ Value y) :) <$> go m xs
-              DistinctBool      -> ((x,Nothing) :) . ((y,Nothing) :) <$> go m xs
-              DistinctArbitrary -> ((x,Nothing) :) <$> go m (tail xss)
+          go _ []           = Right []
+          go m [x]          = deduceStrategy2 (x,"") m >>= \v -> v <$> go m []
+          go m xss@(x:y:xs) = deduceStrategy2 (x,y) m >>= \v -> v <$> go m xs
 
           deduceStrategy2 :: (String,String) -> HashMap String Value -> Either Error ([(String, Maybe Value)] -> [(String, Maybe Value)])
           deduceStrategy2 pair@(x,y) m
@@ -59,8 +54,9 @@ instance Mode Short where
               go :: (Maybe Value,Maybe Value) -> Either Error ([(String, Maybe Value)] -> [(String, Maybe Value)])
               go (Nothing, _) = Left $ UnknownFlag x
               go (Just v, Nothing)
+                | null y =z Right ((x,Nothing) :)
                 | valueIsBool v = Left . FlagSyntax $ x <> " must not have arg"
-                | otherwise = checkForCompatibility pair v >> return ((x,Nothing) :)
+                | otherwise = checkForCompatibility pair v >> return ((x,Just $ Value y) :)
               go (Just v, Just v') =
                 case compare (valueIsBool v) (valueIsBool v') of
                   EQ -> Right $ ((x,Nothing) :) . ((y,Nothing) :)

@@ -1,22 +1,26 @@
+{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications    #-}
 
 module Flag
   ( Flag
   , Short
-  , Long
+--  , Long
+  , Value
 
   , define
   , parseArgs
+  , fromValue
   )
 where
 
-import           Internal.Process   (Long, Mode, Short, process)
-import           Internal.Types     (Args (..), Error, Flag (..), Flags (..),
-                                     NonEmptyArgs (..), Value (..))
+import           Internal.Process4
+import           Internal.Types2    (Args (..), Error, Flag (..), Flags (..),
+                                     Mode (..), NonEmptyArgs (..), Value (..),
+                                     fromValue)
 
 import           Data.HashMap.Lazy  (HashMap)
-import qualified Data.HashMap.Lazy  as Map (fromList, intersection, union)
+import qualified Data.HashMap.Lazy  as Map (fromList, union)
 import           Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NE (nonEmpty, toList)
 import           Data.Typeable      (Typeable)
@@ -34,9 +38,8 @@ type Description = String
    Pay attention, that flag name must be without dashes.
 -}
 define :: (Ord a, Read a, Show a, Typeable a) =>
-          FlagName -> a -> Description -> NonEmpty (Flag b)
-define n v d = Flag n (Value v) d :| []
-
+           FlagName -> a -> Description -> Flag b
+define n v = Flag n (Value v)
 {- |
    'parseArgs' parses incoming arguments from command line.
    It takes flags that must be defined via 'define' function and
@@ -49,17 +52,13 @@ parseArgs flags args = do
       flagsKV = Map.fromList $ zip (map getName flags') (map getValue flags')
   case NE.nonEmpty args of
     Nothing -> return flagsKV
-    Just v  -> do
-      argsKV <- _parse @a (Flags flagsKV) (NEArgs v)
-      return $ unArgs argsKV
+    Just v  ->
+      parse @a (Flags flagsKV) (NEArgs v) >>= return . unArgs
 
-{- |
-   '_parse' processes incoming arguments with defined flags
--}
-_parse :: Mode a =>
+parse :: Mode a =>
           Flags String Value -> NonEmptyArgs a -> Either Error (Args String Value)
-_parse flagsKV args = do
+parse flagsKV args = do
   argsKV <- process flagsKV args
   let fkv = unFlags flagsKV
-      akv = unArgs argsKV
-  return . Args $ Map.intersection (Map.union akv fkv) fkv
+      akv = (\case {Just x -> x; Nothing -> Value True}) <$> unArgs argsKV
+  return $ Args $ Map.union akv fkv
