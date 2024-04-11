@@ -1,15 +1,16 @@
-module Internal.Process.Short where
+module Internal.Process.Short
+  ( Short
 
-import           Internal.Types2
+  , process
+  ) where
 
-import           Data.HashMap.Lazy  (HashMap)
+import           Internal.Types
+
 import qualified Data.HashMap.Lazy  as Map (fromList, lookup, mapKeys)
 import           Data.List.NonEmpty (NonEmpty (..))
-import qualified Data.List.NonEmpty as NE (fromList, nonEmpty, tail, take,
-                                           toList)
-import           Data.Maybe         (fromMaybe)
+import qualified Data.List.NonEmpty as NE (nonEmpty, toList)
 import           Data.Proxy
-import           Data.Typeable      (Typeable, cast, typeOf, typeRep)
+import           Data.Typeable      (typeOf, typeRep)
 import           Text.Read          (readMaybe)
 
 type KV = [(String, Maybe Value)]
@@ -89,9 +90,3 @@ doKVPairChecks (x,y) val@(Value v)
 
 valueIsBool :: Value -> Bool
 valueIsBool (Value v) = typeOf v == typeRep (Proxy @Bool)
-
-splitBy :: String -> Char -> (String, Maybe String)
-splitBy xs delim =
-  case break (== delim) xs of
-    (x, [])  -> (x, Nothing)
-    (x,rest) -> (x, Just $ drop 1 rest)

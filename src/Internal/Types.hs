@@ -1,6 +1,6 @@
 {-# LANGUAGE DerivingStrategies #-}
 
-module Internal.Types2
+module Internal.Types
   ( Flag (..)
   , Flags (..)
   , Args (..)
