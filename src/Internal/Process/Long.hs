@@ -9,7 +9,7 @@ import           Internal.Types2    (Args (..), Error (..), Flags (..),
 
 import           Data.HashMap.Lazy  (HashMap)
 import qualified Data.HashMap.Lazy  as Map (fromList, lookup, mapKeys)
-import qualified Data.List.NonEmpty as NE (fromList, toList)
+import qualified Data.List.NonEmpty as NE (toList)
 import           Data.Proxy         (Proxy (..))
 import           Data.Typeable      (typeOf, typeRep)
 import           Text.Read          (readMaybe)
@@ -42,7 +42,7 @@ instance Mode Long where
                   Nothing -> Left . IncompatibleType $ x <> " must have " <> show (typeOf y) <> " type"
 
 transform :: (String, Maybe String) -> Value -> Maybe (String, Maybe Value)
-transform (x, Nothing) _ = Just (x, Just $ Value True)
+transform (x, Nothing) _ = Just (x, Nothing)
 transform (x, Just y) (Value v)
   | typeOf v == typeRep (Proxy @String) = Just (x, Just $ Value y)
   | otherwise = readMaybe' v y >>= \val -> Just (x, Just $ Value val)

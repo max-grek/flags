@@ -4,7 +4,7 @@ module Internal.Process.Short
   , process
   ) where
 
-import           Internal.Types2
+import           Internal.Types
 
 import qualified Data.HashMap.Lazy  as Map (fromList, lookup, mapKeys)
 import           Data.List.NonEmpty (NonEmpty (..))
@@ -25,48 +25,45 @@ data Strategy
 data Short
 
 instance Mode Short where
-  process :: Flags String Value ->
-             NonEmptyArgs Short ->
-             Either Error (Args String (Maybe Value))
-  process flagsKV args = do
-    let enrichedFKV = Flags $ Map.mapKeys ('-' :) $ unFlags flagsKV
-    argsKV <- build enrichedFKV (unNEArgs args)
+  process :: Flags String Value -> NonEmptyArgs Short -> Either Error (Args String (Maybe Value))
+  process (Flags flagsKV) args = do
+    argsKV <- build (Flags $ Map.mapKeys ('-' :) flagsKV) (unNEArgs args)
     return . Args . Map.mapKeys (drop 1) $ Map.fromList argsKV
     where
       build :: Flags String Value -> NonEmpty String -> Either Error [(String, Maybe Value)]
-      build (Flags m) xs = go $ NE.toList xs
+      build fm xs = go $ NE.toList xs
         where
           go :: [String] -> Either Error [(String, Maybe Value)]
           go [] = Right []
           go xs = case NE.nonEmpty (take 2 xs) of
             Nothing -> Right []
             Just candidates -> do
-              strategy <- deduceStrategy candidates
+              strategy <- deduceStrategy fm candidates
               case strategy of
                 SingleBool kv       -> return kv
                 KVPair f            -> f <$> go (drop 2 xs)
                 DistinctBool f      -> f <$> go (drop 2 xs)
                 DistinctArbitrary f -> f <$> go (drop 1 xs)
 
-          deduceStrategy :: NonEmpty String -> Either Error Strategy
-          deduceStrategy (x :| [])    = deduceStrategy' (x, Nothing)
-          deduceStrategy (x :| (y:_)) = deduceStrategy' (x, Just y)
+deduceStrategy :: Flags String Value -> NonEmpty String -> Either Error Strategy
+deduceStrategy fm (x :| [])    = deduce fm (x, Nothing)
+deduceStrategy fm (x :| (y:_)) = deduce fm (x, Just y)
 
-          deduceStrategy' :: (String, Maybe String) -> Either Error Strategy
-          deduceStrategy' (x, Nothing) =
-            case Map.lookup x m of
-              Nothing -> Left $ UnknownFlag x
-              Just v  -> doSingleCheck x v >> return (SingleBool [(x,Nothing)])
-          deduceStrategy' (x, Just y) = deduce (Map.lookup x m, Map.lookup y m)
-            where
-              deduce :: (Maybe Value, Maybe Value) -> Either Error Strategy
-              deduce (Nothing, _)      = Left $ UnknownFlag x
-              deduce (Just v, Nothing) = doKVPairChecks (x,y) v >>= \pair -> return (KVPair (pair :))
-              deduce (Just v, Just v') =
-                case compare (valueIsBool v) (valueIsBool v') of
-                  EQ -> Right . DistinctBool $ ((x,Nothing) :) . ((y,Nothing) :)
-                  LT -> Left . FlagSyntax $ x <> " must have arg"
-                  GT -> Right $ DistinctArbitrary ((x,Nothing) :)
+deduce :: Flags String Value -> (String, Maybe String) -> Either Error Strategy
+deduce (Flags m) (x, Nothing) =
+  case Map.lookup x m of
+    Nothing -> Left $ UnknownFlag x
+    Just v  -> doSingleCheck x v >> return (SingleBool [(x,Nothing)])
+deduce (Flags m) (x, Just y) = go (Map.lookup x m, Map.lookup y m)
+  where
+    go :: (Maybe Value, Maybe Value) -> Either Error Strategy
+    go (Nothing, _) = Left $ UnknownFlag x
+    go (Just v, Nothing) = doKVPairChecks (x,y) v >>= \pair -> return (KVPair (pair :))
+    go (Just v, Just v') =
+      case compare (valueIsBool v) (valueIsBool v') of
+        EQ -> Right . DistinctBool $ ((x,Nothing) :) . ((y,Nothing) :)
+        LT -> Left . FlagSyntax $ x <> " must have arg"
+        GT -> Right $ DistinctArbitrary ((x,Nothing) :)
 
 doSingleCheck :: String -> Value -> Either Error ()
 doSingleCheck x v
