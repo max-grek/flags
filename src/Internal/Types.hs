@@ -1,4 +1,3 @@
--- kowainik haskell style - data types, export lists -> https://kowainik.github.io/posts/2019-02-06-style-guide
 {-# LANGUAGE DerivingStrategies #-}
 
 module Internal.Types
@@ -8,23 +7,35 @@ module Internal.Types
   , NonEmptyArgs (..)
   , Value (..)
   , Error (..)
+  , Mode (..)
+
+  , fromValue
   )
 where
 
 import           Data.HashMap.Lazy  (HashMap)
 import           Data.List.NonEmpty (NonEmpty)
-import           Data.Typeable      (Typeable)
+import           Data.Proxy
+import           Data.Typeable      (Typeable, cast, typeOf, typeRep)
 
 data Flag a = Flag
   { getName        :: !String
   , getValue       :: !Value
   , getDescription :: !String
-  }
+  } deriving stock Show
 
 data Value = forall a . (Ord a, Read a, Show a, Typeable a) => Value a
 
+fromValue :: forall a . Typeable a => Value -> Maybe a
+fromValue (Value v)
+  | typeOf v == typeRep (Proxy @a) = cast v
+  | otherwise = Nothing
+
 instance Show Value where
   show (Value v) = show v
+
+class Mode a where
+  process :: Flags String Value -> NonEmptyArgs a -> Either Error (Args String (Maybe Value))
 
 newtype Flags k v = Flags
   { unFlags :: HashMap k v
