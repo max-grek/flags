@@ -19,10 +19,10 @@ library
     import:           warnings
     exposed-modules:  Flag
     other-modules:    Internal.Types
-                      Internal.Types2
                       Internal.Process
                       Internal.Process.Long
                       Internal.Process.Short
+                      
     default-extensions: LambdaCase
                         ScopedTypeVariables
                         TypeApplications
