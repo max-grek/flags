@@ -8,7 +8,7 @@ import           Flag
 import           System.Environment (getArgs)
 import           System.Exit        (exitFailure)
 
-flags :: NonEmpty (Flag Short)
+flags :: NonEmpty (Flag Long)
 flags =
     -- http flags
     define "http-host" "0.0.0.0" "http host" <|

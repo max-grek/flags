@@ -1,18 +1,18 @@
 {-# LANGUAGE DerivingStrategies #-}
 
-module Internal.Types
+module Internal.Types2
   ( Flag (..)
   , Flags (..)
   , Args (..)
   , NonEmptyArgs (..)
   , Value (..)
   , Error (..)
+  , Mode (..)
 
   , fromValue
   )
 where
 
-import           Control.Monad      (guard)
 import           Data.HashMap.Lazy  (HashMap)
 import           Data.List.NonEmpty (NonEmpty)
 import           Data.Proxy
@@ -22,7 +22,7 @@ data Flag a = Flag
   { getName        :: !String
   , getValue       :: !Value
   , getDescription :: !String
-  }
+  } deriving stock Show
 
 data Value = forall a . (Ord a, Read a, Show a, Typeable a) => Value a
 
@@ -33,6 +33,9 @@ fromValue (Value v)
 
 instance Show Value where
   show (Value v) = show v
+
+class Mode a where
+  process :: Flags String Value -> NonEmptyArgs a -> Either Error (Args String (Maybe Value))
 
 newtype Flags k v = Flags
   { unFlags :: HashMap k v

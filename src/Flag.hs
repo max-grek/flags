@@ -5,7 +5,7 @@
 module Flag
   ( Flag
   , Short
---  , Long
+  , Long
   , Value
 
   , define
@@ -14,16 +14,18 @@ module Flag
   )
 where
 
-import           Internal.Process4
-import           Internal.Types2    (Args (..), Error, Flag (..), Flags (..),
-                                     Mode (..), NonEmptyArgs (..), Value (..),
-                                     fromValue)
+import           Internal.Process.Long
+import           Internal.Process.Short
+import           Internal.Types2        (Args (..), Error, Flag (..),
+                                         Flags (..), Mode (..),
+                                         NonEmptyArgs (..), Value (..),
+                                         fromValue)
 
-import           Data.HashMap.Lazy  (HashMap)
-import qualified Data.HashMap.Lazy  as Map (fromList, union)
-import           Data.List.NonEmpty (NonEmpty (..))
-import qualified Data.List.NonEmpty as NE (nonEmpty, toList)
-import           Data.Typeable      (Typeable)
+import           Data.HashMap.Lazy      (HashMap)
+import qualified Data.HashMap.Lazy      as Map (fromList, union)
+import           Data.List.NonEmpty     (NonEmpty (..))
+import qualified Data.List.NonEmpty     as NE (nonEmpty, toList)
+import           Data.Typeable          (Typeable)
 
 type FlagName = String
 type Description = String
