@@ -15,7 +15,7 @@ module Flag
 where
 
 import           Internal.Process
-import           Internal.Types     (Args (..), Error, Flag (..), Flags (..),
+import           Internal.Types2    (Args (..), Error, Flag (..), Flags (..),
                                      Mode (..), NonEmptyArgs (..), Value (..),
                                      fromValue)
 

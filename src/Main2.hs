@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Main (main) where
 
 import qualified Data.HashMap.Lazy  as Map (toList)
@@ -42,9 +40,9 @@ flags =
     define "redis-port" (0 :: Int) "redis port" :| []
 
 setHttp :: Test -> (String,Value) -> Test
-setHttp x ("http-host", v)  = x {getTest0 = fromMaybe "" $ fromValue v}
-setHttp x ("http-port", v)  = x {getTest1 = fromMaybe 0 $ fromValue v}
-setHttp x ("db-encrypt", v) = x {getTest2 = fromMaybe False $ fromValue v}
+setHttp x ("http-host", v)  = x {getTest0 = test "" v}
+setHttp x ("http-port", v)  = x {getTest1 = test 0 v}
+setHttp x ("db-encrypt", v) = x {getTest2 = test False v}
 setHttp x _                 = x
 
 main :: IO ()

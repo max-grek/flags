@@ -4,7 +4,7 @@ module Internal.Process.Long
   , process
   ) where
 
-import           Internal.Types     (Args (..), Error (..), Flags (..),
+import           Internal.Types2    (Args (..), Error (..), Flags (..),
                                      Mode (..), NonEmptyArgs (..), Value (..))
 
 import           Data.HashMap.Lazy  (HashMap)

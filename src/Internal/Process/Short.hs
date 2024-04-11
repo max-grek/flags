@@ -4,7 +4,7 @@ module Internal.Process.Short
   , process
   ) where
 
-import           Internal.Types
+import           Internal.Types2
 
 import qualified Data.HashMap.Lazy  as Map (fromList, lookup, mapKeys)
 import           Data.List.NonEmpty (NonEmpty (..))

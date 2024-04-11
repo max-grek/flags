@@ -1,1 +1,0 @@
-samurai@nakatomi.2005:1712814633
